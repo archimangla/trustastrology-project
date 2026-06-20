@@ -255,7 +255,12 @@ async function sendToAPI() {
     });
     const data = await readJSON(res);
     loadingEntry.remove();
-    if (!res.ok) throw new Error(data.error || "The reading didn't come through.");
+    if (!res.ok) {
+      const detail = data.details
+        ? (typeof data.details === "string" ? data.details : JSON.stringify(data.details))
+        : "";
+      throw new Error([data.error, detail].filter(Boolean).join(" ") || "The reading didn't come through.");
+    }
 
     state.messages.push({ role: "assistant", content: data.reply });
     appendEntry({ role: "astrologer", who: "The reading", text: data.reply });
