@@ -5,7 +5,7 @@ birth details, it casts a real D1 (Lagna) birth chart, locates the Moon's
 Nakshatra and Pada, and reads out the traditional naming syllable through a
 conversation with an AI acting as an expert Vedic astrologer.
 
-**Live deployment:** _add your Vercel URL here after deploying_
+**Live deployment:** https://trustastrology-moon.vercel.app
 **Repo:** https://github.com/archimangla/trustastrology-moon
 
 ---
@@ -40,7 +40,7 @@ chart JSON (planets[], ascendant)
                       so it cannot hallucinate this part.
 
                       STEP 2 (LLM reasoning): hand those grounded facts to
-                      Claude with a system prompt that explicitly forbids
+                      Llama 3.3 70B (via Groq) with a system prompt that explicitly forbids
                       inventing chart facts it wasn't given, and asks it to
                       explain the reading and suggest names in plain
                       language.
@@ -78,7 +78,7 @@ trustastrology-ai/
 ├── app.js                # form handling, chart SVG rendering, chat logic
 ├── api/
 │   ├── chart.js          # POST /api/chart      → proxies the GraphQL API
-│   └── astrologer.js     # POST /api/astrologer  → grounded Claude reasoning
+│   └── astrologer.js     # POST /api/astrologer  → grounded LLM reasoning (Groq)
 ├── data/
 │   ├── nakshatra-table.js  # 27×4 naming-syllable reference table
 │   └── rashi-table.js      # 12 zodiac signs, house-number math

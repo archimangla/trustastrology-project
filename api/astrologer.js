@@ -1,8 +1,8 @@
 const { findNakshatra, getNamingSyllable } = require("../data/nakshatra-table");
 const { findRashi } = require("../data/rashi-table");
 
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-sonnet-4-6";
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL = "llama-3.3-70b-versatile";
 
 function findPlanet(chart, planetName) {
   const list = Array.isArray(chart?.planets) ? chart.planets : [];
@@ -71,10 +71,10 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "Use POST." });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return res.status(500).json({
-      error: "Server is missing ANTHROPIC_API_KEY. Add it in Vercel → Settings → Environment Variables.",
+      error: "Server is missing GROQ_API_KEY. Add it in Vercel → Settings → Environment Variables.",
     });
   }
 
@@ -99,23 +99,21 @@ module.exports = async (req, res) => {
   }
 
   const system = systemPromptFor(grounded.facts, gender);
-  const anthropicMessages = messages
+  const chatMessages = messages
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
     .map((m) => ({ role: m.role, content: m.content }));
 
   try {
-    const upstream = await fetch(ANTHROPIC_URL, {
+    const upstream = await fetch(GROQ_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 700,
-        system,
-        messages: anthropicMessages,
+        messages: [{ role: "system", content: system }, ...chatMessages],
       }),
     });
 
@@ -128,11 +126,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    const text = (payload.content || [])
-      .filter((b) => b.type === "text")
-      .map((b) => b.text)
-      .join("\n")
-      .trim();
+    const text = (payload.choices?.[0]?.message?.content || "").trim();
 
     return res.status(200).json({ reply: text, facts: grounded.facts });
   } catch (err) {
