@@ -1,5 +1,3 @@
-
-
 const RASHIS = [
   "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
   "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
@@ -63,6 +61,25 @@ const HOUSES = [
 
 const state = { chart: null, gender: "", messages: [] };
 
+// Reads a fetch Response as JSON without throwing the cryptic
+// "Unexpected end of JSON input" error when the server sends back an
+// empty or non-JSON body (timeouts, cold-start hiccups, etc).
+async function readJSON(res) {
+  const raw = await res.text();
+  if (!raw) {
+    throw new Error(
+      res.ok
+        ? "The server sent back an empty response. Please try again."
+        : `Server error (${res.status}). Please try again in a moment.`
+    );
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error(`Server returned an unexpected response (${res.status}). Please try again.`);
+  }
+}
+
 const form = document.getElementById("birth-form");
 const cityPreset = document.getElementById("city-preset");
 const castBtn = document.getElementById("cast-btn");
@@ -101,7 +118,7 @@ form.addEventListener("submit", async (e) => {
 
   const fd = new FormData(form);
   const dateVal = fd.get("date"); // YYYY-MM-DD
-  const timeVal = fd.get("time"); // HH:MM[:SS]
+  const timeVal = fd.get("time"); // HH:MM
   if (!dateVal || !timeVal) return showError("Please fill in both date and time of birth.");
 
   const [year, month, day] = dateVal.split("-").map(Number);
@@ -126,7 +143,7 @@ form.addEventListener("submit", async (e) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
+    const data = await readJSON(res);
     if (!res.ok) throw new Error(data.error || "Couldn't cast the chart.");
 
     state.chart = data.chart;
@@ -167,7 +184,7 @@ newChartBtn.addEventListener("click", () => {
 });
 
 function renderChart(chart) {
-  chartNameEl.textContent = chart.name || "—";
+  chartNameEl.textContent = chart.name || "";
 
   const ascRashiNum = rashiNumber(chart.ascendant?.rashi || chart.ascendant?.sign);
   const rashiByHouse = [];
@@ -236,7 +253,7 @@ async function sendToAPI() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chart: state.chart, messages: state.messages, gender: state.gender }),
     });
-    const data = await res.json();
+    const data = await readJSON(res);
     loadingEntry.remove();
     if (!res.ok) throw new Error(data.error || "The reading didn't come through.");
 
@@ -247,7 +264,7 @@ async function sendToAPI() {
     appendEntry({
       role: "astrologer",
       who: "The reading",
-      text: err.message || "The stars didn't come through clearly — try again.",
+      text: err.message || "The stars didn't come through clearly. Try again.",
       error: true,
       onRetry: () => sendToAPI(),
     });

@@ -6,7 +6,7 @@ Nakshatra and Pada, and reads out the traditional naming syllable through a
 conversation with an AI acting as an expert Vedic astrologer.
 
 **Live deployment:** _add your Vercel URL here after deploying_
-**Repo:** _add your GitHub URL here_
+**Repo:** https://github.com/archimangla/trustastrology-moon
 
 ---
 
@@ -14,9 +14,9 @@ conversation with an AI acting as an expert Vedic astrologer.
 
 The assignment asks for two very different things stitched together:
 
-1. **A chart** — deterministic astronomical/astrological data from the
+1. **A chart**: deterministic astronomical/astrological data from the
    provided GraphQL endpoint (planet positions, houses, nakshatra, pada).
-2. **A reading** — natural-language reasoning, in the voice of an expert
+2. **A reading**: natural-language reasoning, in the voice of an expert
    astrologer, that a parent can actually use.
 
 Those don't belong in the same step. So the backend is split into two
@@ -36,8 +36,8 @@ chart JSON (planets[], ascendant)
 /api/astrologer    →  STEP 1 (deterministic): find Moon in chart.planets,
                       normalize its nakshatra name, look up the exact
                       naming syllable for that nakshatra + pada in a fixed
-                      108-entry reference table. No model involved here —
-                      it cannot hallucinate this part.
+                      108-entry reference table. No model involved here,
+                      so it cannot hallucinate this part.
 
                       STEP 2 (LLM reasoning): hand those grounded facts to
                       Claude with a system prompt that explicitly forbids
@@ -49,7 +49,7 @@ chart JSON (planets[], ascendant)
 Reply shown in the chat thread
 ```
 
-Deterministic facts first, model reasoning second — the model is never the
+Deterministic facts first, model reasoning second. The model is never the
 source of truth for "what nakshatra/pada/syllable is this," only for how to
 explain it and what names to suggest. This is also exactly why the
 "without fabricating missing data" requirement in the brief is satisfiable:
@@ -59,15 +59,15 @@ returns an error instead of asking the model to guess.
 The Nakshatra→Pada→syllable table and the house-numbering formula were both
 checked against the two reference videos linked in the assignment (the
 worked Sagittarius-ascendant example, and the explicit "Ashwini pada 1 →
-chu, pada 2 → che" naming rule) — see `data/nakshatra-table.js` and
+chu, pada 2 -> che" naming rule); see `data/nakshatra-table.js` and
 `data/rashi-table.js` for the source notes.
 
 ---
 
 ## Stack
 
-Deliberately no frontend framework — plain HTML/CSS/JS, deployed as static
-files. Backend is two Vercel Serverless Functions (Node, no dependencies —
+Deliberately no frontend framework: plain HTML/CSS/JS, deployed as static
+files. Backend is two Vercel Serverless Functions (Node, no dependencies;
 Node 20's built-in `fetch` is enough). Everything lives in one Vercel
 project.
 
@@ -108,7 +108,7 @@ Request body:
 }
 ```
 
-`month` accepts either a number (1–12) or a month name — the function
+`month` accepts either a number (1-12) or a month name. The function
 converts it to the name string the GraphQL API expects. Response:
 `{ "chart": { name, symbol, planets: [...], ascendant: {...} } }`.
 
@@ -124,7 +124,7 @@ Request body:
 }
 ```
 
-The full conversation is sent every turn (the function is stateless — no
+The full conversation is sent every turn (the function is stateless, so no
 birth data is stored anywhere, server or client beyond the open tab).
 Response: `{ "reply": "...", "facts": { moonNakshatra, moonPada, namingSyllable, ... } }`.
 
@@ -133,11 +133,11 @@ Response: `{ "reply": "...", "facts": { moonNakshatra, moonPada, namingSyllable,
 ## Design notes
 
 The visual direction is built from the subject itself rather than a
-generic chat-app template: a dusk-indigo background with turmeric/marigold
-and sindoor-red accents (the pigments actually used in a Namakaran naming
-ceremony), `Fraunces` for the astrologer's voice and headings, `Work Sans`
-for interface copy, and `IBM Plex Mono` for the numeric/data fields
-(coordinates, timestamps, house numbers) — because that data is real and
+generic chat-app template: a soft pastel-pink palette in place of the
+usual dark, neon AI-app look, `Fraunces` for the astrologer's voice and
+headings, `Work Sans` for interface copy, and `IBM Plex Mono` for the
+numeric/data fields
+(coordinates, timestamps, house numbers), because that data is real and
 precise, not decorative.
 
 The centerpiece is a hand-built SVG of the **North Indian (diamond-style)
@@ -147,7 +147,7 @@ number written in each house is computed from the Ascendant's sign; the
 Moon's house glows and pulses gently since it drives the entire reading.
 The chat thread itself is styled as manuscript entries on a vertical
 timeline rather than rounded bubbles, with the astrologer's words in serif
-and your questions in a smaller mono "margin note" style — deliberately
+and your questions in a smaller mono "margin note" style, deliberately
 not the default AI-chatbot look.
 
 ## Known limitations / things to double-check on first real run
@@ -162,7 +162,7 @@ not the default AI-chatbot look.
   browser's network tab / Vercel function logs for the raw `nakshatra` and
   `rashi` strings** and add an alias if a lookup ever returns `null`.
 - This is a naming-guidance tool grounded in the Swar Siddhanta tradition,
-  not a substitute for a full consultation — said plainly in the footer
+  not a substitute for a full consultation, said plainly in the footer
   and in the AI's system prompt (it won't answer questions about doshas,
   career, marriage timing, etc. since the chart data doesn't cover them).
 - No birth data is persisted to a database; everything lives in the

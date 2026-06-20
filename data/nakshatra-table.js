@@ -1,4 +1,3 @@
-
 const NAKSHATRAS = [
   { id: 1, name: "Ashwini", aliases: ["ashvini", "aswini"], padas: ["Chu", "Che", "Cho", "La"] },
   { id: 2, name: "Bharani", aliases: [], padas: ["Li", "Lu", "Le", "Lo"] },
@@ -57,7 +56,7 @@ function findNakshatra(rawName) {
 
 /**
  * Get the naming syllable for a specific nakshatra + pada (1-4).
- * Returns null if nakshatra unknown or pada out of range — caller must
+ * Returns null if nakshatra unknown or pada out of range. Caller must
  * handle this explicitly rather than guessing, per "don't fabricate
  * missing data".
  */

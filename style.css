@@ -1,27 +1,27 @@
-
 :root {
-  --bg: #1b1730;
-  --bg-soft: #241f40;
-  --bg-softer: #2c2650;
-  --ink: #f4ecdd;
-  --ink-dim: #beb4d6;
-  --ink-faint: #8d83a8;
-  --marigold: #e8a33d;
-  --marigold-soft: #f0c178;
-  --vermilion: #d4663a;
-  --line: rgba(244, 236, 221, 0.14);
-  --line-strong: rgba(244, 236, 221, 0.28);
+  --bg: #fdf2f6;
+  --bg-soft: #fffafc;
+  --bg-softer: #fbe7ee;
+  --ink: #3f2c36;
+  --ink-dim: #7c5d6a;
+  --ink-faint: #a98a96;
+  --rose: #c9647f;
+  --rose-soft: #e6a3b6;
+  --rose-deep: #aa4d68;
+  --coral: #c5694f;
+  --line: rgba(63, 44, 54, 0.12);
+  --line-strong: rgba(63, 44, 54, 0.22);
 
   --font-display: "Fraunces", Georgia, serif;
   --font-body: "Work Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  --radius: 4px;
+  --radius: 10px;
 }
 
 * { box-sizing: border-box; }
 
-html { color-scheme: dark; }
+html { color-scheme: light; }
 
 body {
   margin: 0;
@@ -37,18 +37,16 @@ body {
   inset: 0;
   z-index: -1;
   background-image:
-    radial-gradient(1px 1px at 12% 18%, rgba(244,236,221,0.5), transparent),
-    radial-gradient(1px 1px at 78% 8%, rgba(244,236,221,0.35), transparent),
-    radial-gradient(1.5px 1.5px at 42% 32%, rgba(244,236,221,0.4), transparent),
-    radial-gradient(1px 1px at 88% 64%, rgba(244,236,221,0.3), transparent),
-    radial-gradient(1px 1px at 23% 76%, rgba(244,236,221,0.3), transparent),
-    radial-gradient(1.5px 1.5px at 60% 90%, rgba(244,236,221,0.25), transparent),
-    linear-gradient(180deg, #1b1730 0%, #1f1a38 55%, #221c3e 100%);
+    radial-gradient(420px 420px at 8% 6%, rgba(230, 163, 182, 0.35), transparent),
+    radial-gradient(360px 360px at 92% 12%, rgba(249, 214, 224, 0.55), transparent),
+    radial-gradient(480px 480px at 80% 92%, rgba(230, 163, 182, 0.25), transparent),
+    radial-gradient(320px 320px at 6% 88%, rgba(249, 214, 224, 0.5), transparent),
+    linear-gradient(180deg, #fdf2f6 0%, #fdf5f8 55%, #fbeef3 100%);
   background-repeat: no-repeat;
   background-size: cover;
 }
 
-a { color: var(--marigold-soft); }
+a { color: var(--rose-deep); }
 
 .site-header {
   max-width: 720px;
@@ -62,7 +60,7 @@ a { color: var(--marigold-soft); }
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--marigold);
+  color: var(--rose-deep);
   margin: 0 0 0.9rem;
 }
 
@@ -75,6 +73,7 @@ a { color: var(--marigold-soft); }
   line-height: 1.08;
   margin: 0 0 1rem;
   letter-spacing: -0.01em;
+  color: var(--ink);
 }
 
 .site-header .sub {
@@ -99,6 +98,7 @@ main {
   border-radius: var(--radius);
   background: linear-gradient(180deg, var(--bg-soft), var(--bg-softer));
   padding: 2rem 2rem 2.25rem;
+  box-shadow: 0 16px 40px -28px rgba(170, 77, 104, 0.35);
 }
 
 .ledger-title {
@@ -108,6 +108,7 @@ main {
   margin: 0 0 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--line);
+  color: var(--ink);
 }
 
 #birth-form .row {
@@ -141,7 +142,7 @@ main {
 
 .field input,
 .field select {
-  background: rgba(0, 0, 0, 0.18);
+  background: #ffffff;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   color: var(--ink);
@@ -158,12 +159,12 @@ main {
 .field select:focus-visible,
 button:focus-visible,
 input:focus-visible {
-  outline: 2px solid var(--marigold);
+  outline: 2px solid var(--rose);
   outline-offset: 2px;
 }
 
 #city-preset {
-  background: rgba(0, 0, 0, 0.18);
+  background: #ffffff;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   color: var(--ink-dim);
@@ -176,8 +177,8 @@ input:focus-visible {
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.95rem;
-  background: var(--marigold);
-  color: #221a08;
+  background: var(--rose-deep);
+  color: #fff7f9;
   border: none;
   border-radius: var(--radius);
   padding: 0.85rem 1.6rem;
@@ -185,7 +186,7 @@ input:focus-visible {
   transition: background 0.15s ease, transform 0.15s ease;
 }
 
-.primary-btn:hover { background: var(--marigold-soft); }
+.primary-btn:hover { background: var(--rose); }
 .primary-btn:active { transform: translateY(1px); }
 .primary-btn:disabled { opacity: 0.6; cursor: progress; }
 .primary-btn.small { padding: 0.65rem 1.1rem; font-size: 0.88rem; }
@@ -204,7 +205,7 @@ input:focus-visible {
 .ghost-btn:hover { color: var(--ink); border-color: var(--ink-dim); }
 
 .error-line {
-  color: var(--vermilion);
+  color: var(--coral);
   font-size: 0.88rem;
   margin: -0.4rem 0 1rem;
 }
@@ -229,6 +230,7 @@ input:focus-visible {
   padding: 1.5rem;
   position: sticky;
   top: 1.5rem;
+  box-shadow: 0 16px 40px -28px rgba(170, 77, 104, 0.3);
 }
 
 @media (max-width: 860px) {
@@ -240,6 +242,8 @@ input:focus-visible {
   font-weight: 500;
   font-size: 1.4rem;
   margin: 0 0 1rem;
+  min-height: 1.4em;
+  color: var(--ink);
 }
 
 #d1-chart { width: 100%; height: auto; display: block; }
@@ -252,7 +256,7 @@ input:focus-visible {
 
 /* chart svg styling */
 .house {
-  fill: rgba(244, 236, 221, 0.03);
+  fill: rgba(201, 100, 127, 0.05);
   stroke: var(--line-strong);
   stroke-width: 1;
   opacity: 0;
@@ -260,14 +264,14 @@ input:focus-visible {
   animation: houseIn 0.5s ease forwards;
 }
 .house.moon-house {
-  fill: rgba(232, 163, 61, 0.16);
-  stroke: var(--marigold);
+  fill: rgba(230, 163, 182, 0.4);
+  stroke: var(--rose-deep);
   animation: houseIn 0.5s ease forwards, moonPulse 2.8s ease-in-out 0.9s infinite;
 }
 .house-rashi { font-family: var(--font-mono); font-size: 11px; fill: var(--ink-faint); text-anchor: middle; }
 .house-planets { font-family: var(--font-mono); font-size: 12px; font-weight: 500; fill: var(--ink); text-anchor: middle; }
-.house-planets.moon-glyph-line { fill: var(--marigold-soft); }
-.asc-tag { font-family: var(--font-mono); font-size: 9px; fill: var(--marigold); text-anchor: middle; letter-spacing: 0.08em; }
+.house-planets.moon-glyph-line { fill: var(--rose-deep); }
+.asc-tag { font-family: var(--font-mono); font-size: 9px; fill: var(--rose-deep); text-anchor: middle; letter-spacing: 0.08em; }
 
 @keyframes houseIn {
   from { opacity: 0; transform: scale(0.85); }
@@ -275,7 +279,7 @@ input:focus-visible {
 }
 @keyframes moonPulse {
   0%, 100% { fill-opacity: 1; }
-  50% { fill-opacity: 0.55; }
+  50% { fill-opacity: 0.6; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -293,6 +297,7 @@ input:focus-visible {
   min-height: 420px;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 16px 40px -28px rgba(170, 77, 104, 0.3);
 }
 
 .chat-thread {
@@ -317,7 +322,7 @@ input:focus-visible {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--marigold);
+  background: var(--rose-deep);
 }
 .entry.user::before { background: var(--ink-faint); }
 
@@ -341,6 +346,7 @@ input:focus-visible {
   line-height: 1.55;
   margin: 0;
   white-space: pre-wrap;
+  color: var(--ink);
 }
 
 .entry.user {
@@ -362,13 +368,13 @@ input:focus-visible {
   font-style: italic;
 }
 
-.entry.error .who { color: var(--vermilion); }
-.entry.error p { color: var(--vermilion); font-family: var(--font-body); font-size: 0.92rem; }
+.entry.error .who { color: var(--coral); }
+.entry.error p { color: var(--coral); font-family: var(--font-body); font-size: 0.92rem; }
 .entry.error button {
   margin-top: 0.6rem;
   background: transparent;
-  border: 1px solid var(--vermilion);
-  color: var(--vermilion);
+  border: 1px solid var(--coral);
+  color: var(--coral);
   border-radius: var(--radius);
   padding: 0.4rem 0.8rem;
   font-size: 0.8rem;
@@ -382,7 +388,7 @@ input:focus-visible {
 
 .chat-input-row input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.18);
+  background: #ffffff;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   color: var(--ink);

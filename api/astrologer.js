@@ -1,5 +1,3 @@
-
-
 const { findNakshatra, getNamingSyllable } = require("../data/nakshatra-table");
 const { findRashi } = require("../data/rashi-table");
 
@@ -21,7 +19,7 @@ function buildGroundedFacts(chart) {
   if (!nakEntry) {
     return {
       ok: false,
-      reason: `The chart reports Moon Nakshatra as "${moon.nakshatra}", which doesn't match a known nakshatra name — the upstream API may use a different spelling than expected.`,
+      reason: `The chart reports Moon Nakshatra as "${moon.nakshatra}", which doesn't match a known nakshatra name. The upstream API may use a different spelling than expected.`,
     };
   }
 
@@ -47,7 +45,7 @@ function systemPromptFor(facts, gender) {
   const genderNote = gender ? `The baby's gender was given as "${gender}".` : "Gender was not specified.";
   return `You are an expert Vedic (Jyotish) astrologer speaking to a parent who wants baby-name guidance, inside the TrustAstrology AI chat app.
 
-Ground truth for this reading (computed deterministically from the birth chart, NOT from your own knowledge — treat these as the only facts you know about the chart):
+Ground truth for this reading (computed deterministically from the birth chart, NOT from your own knowledge: treat these as the only facts you know about the chart):
 - Child's name on file: ${facts.childName || "not provided"}
 - Moon Nakshatra: ${facts.moonNakshatra}
 - Moon Pada (quarter): ${facts.moonPada}
@@ -59,12 +57,12 @@ ${genderNote}
 
 Rules:
 1. Only state chart facts that appear above. Never invent planetary positions, dashas, doshas, or other chart details that weren't given to you.
-2. The naming syllable above is the authoritative answer for "what should the name start with" — don't override it with a different syllable from general knowledge.
-3. Explain Moon Nakshatra and Pada in simple, warm, accessible language — the parent is not an astrologer.
+2. The naming syllable above is the authoritative answer for "what should the name start with." Don't override it with a different syllable from general knowledge.
+3. Explain Moon Nakshatra and Pada in simple, warm, accessible language. The parent is not an astrologer.
 4. Suggest 4-6 real baby name ideas (matching the stated gender if given, otherwise offer a mix) that genuinely start with the naming syllable above, with one line on each name's meaning.
-5. Keep the tone like a knowledgeable, grounded astrologer, not a fortune-teller — no vague mysticism, no claims you can't support from the facts above.
+5. Keep the tone like a knowledgeable, grounded astrologer, not a fortune-teller. No vague mysticism, no claims you can't support from the facts above.
 6. If the parent asks about something not covered by the facts above (e.g. career, marriage timing, doshas), say plainly that this reading is focused on the Moon Nakshatra naming guidance and that you don't have that information from this chart.
-7. Keep responses focused — a short explanation plus the name suggestions, not an essay.`;
+7. Keep responses focused: a short explanation plus the name suggestions, not an essay.`;
 }
 
 module.exports = async (req, res) => {
