@@ -1,0 +1,12 @@
+{
+  "name": "trustastrology-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-driven Vedic astrology baby-naming chat app. Casts a D1 chart, finds the Moon's Nakshatra and Pada, and reads the traditional naming syllable through with you.",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}

@@ -1,0 +1,146 @@
+
+
+const { findNakshatra, getNamingSyllable } = require("../data/nakshatra-table");
+const { findRashi } = require("../data/rashi-table");
+
+const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+const MODEL = "claude-sonnet-4-6";
+
+function findPlanet(chart, planetName) {
+  const list = Array.isArray(chart?.planets) ? chart.planets : [];
+  return list.find((p) => String(p?.name || "").toLowerCase() === planetName.toLowerCase()) || null;
+}
+
+function buildGroundedFacts(chart) {
+  const moon = findPlanet(chart, "Moon");
+  if (!moon) {
+    return { ok: false, reason: "No Moon entry found in the chart data returned by the astrology service." };
+  }
+
+  const nakEntry = findNakshatra(moon.nakshatra);
+  if (!nakEntry) {
+    return {
+      ok: false,
+      reason: `The chart reports Moon Nakshatra as "${moon.nakshatra}", which doesn't match a known nakshatra name — the upstream API may use a different spelling than expected.`,
+    };
+  }
+
+  const syllable = getNamingSyllable(moon.nakshatra, moon.pada);
+  const ascRashi = chart?.ascendant ? findRashi(chart.ascendant.rashi || chart.ascendant.sign) : null;
+
+  return {
+    ok: true,
+    facts: {
+      childName: chart?.name || null,
+      moonSign: moon.sign || moon.rashi || null,
+      moonNakshatra: nakEntry.name,
+      moonPada: moon.pada,
+      namingSyllable: syllable,
+      allPadaSyllablesForNakshatra: nakEntry.padas,
+      ascendantSign: chart?.ascendant?.sign || chart?.ascendant?.rashi || null,
+      ascendantRashiNum: ascRashi ? ascRashi.id : null,
+    },
+  };
+}
+
+function systemPromptFor(facts, gender) {
+  const genderNote = gender ? `The baby's gender was given as "${gender}".` : "Gender was not specified.";
+  return `You are an expert Vedic (Jyotish) astrologer speaking to a parent who wants baby-name guidance, inside the TrustAstrology AI chat app.
+
+Ground truth for this reading (computed deterministically from the birth chart, NOT from your own knowledge — treat these as the only facts you know about the chart):
+- Child's name on file: ${facts.childName || "not provided"}
+- Moon Nakshatra: ${facts.moonNakshatra}
+- Moon Pada (quarter): ${facts.moonPada}
+- Naming syllable (Naam Akshar) for this exact nakshatra + pada: "${facts.namingSyllable}"
+- All four pada syllables within ${facts.moonNakshatra} (for context only): ${facts.allPadaSyllablesForNakshatra.join(", ")}
+- Moon sign (Rashi): ${facts.moonSign || "not provided"}
+- Ascendant sign: ${facts.ascendantSign || "not provided"}
+${genderNote}
+
+Rules:
+1. Only state chart facts that appear above. Never invent planetary positions, dashas, doshas, or other chart details that weren't given to you.
+2. The naming syllable above is the authoritative answer for "what should the name start with" — don't override it with a different syllable from general knowledge.
+3. Explain Moon Nakshatra and Pada in simple, warm, accessible language — the parent is not an astrologer.
+4. Suggest 4-6 real baby name ideas (matching the stated gender if given, otherwise offer a mix) that genuinely start with the naming syllable above, with one line on each name's meaning.
+5. Keep the tone like a knowledgeable, grounded astrologer, not a fortune-teller — no vague mysticism, no claims you can't support from the facts above.
+6. If the parent asks about something not covered by the facts above (e.g. career, marriage timing, doshas), say plainly that this reading is focused on the Moon Nakshatra naming guidance and that you don't have that information from this chart.
+7. Keep responses focused — a short explanation plus the name suggestions, not an essay.`;
+}
+
+module.exports = async (req, res) => {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ error: "Use POST." });
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({
+      error: "Server is missing ANTHROPIC_API_KEY. Add it in Vercel → Settings → Environment Variables.",
+    });
+  }
+
+  let body = req.body;
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      return res.status(400).json({ error: "Malformed request body." });
+    }
+  }
+
+  const { chart, messages, gender } = body || {};
+  if (!chart) return res.status(400).json({ error: "Missing chart data." });
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: "Missing conversation messages." });
+  }
+
+  const grounded = buildGroundedFacts(chart);
+  if (!grounded.ok) {
+    return res.status(422).json({ error: grounded.reason });
+  }
+
+  const system = systemPromptFor(grounded.facts, gender);
+  const anthropicMessages = messages
+    .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+    .map((m) => ({ role: m.role, content: m.content }));
+
+  try {
+    const upstream = await fetch(ANTHROPIC_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 700,
+        system,
+        messages: anthropicMessages,
+      }),
+    });
+
+    const payload = await upstream.json();
+
+    if (!upstream.ok) {
+      return res.status(502).json({
+        error: "The AI reasoning service returned an error.",
+        details: payload?.error?.message || payload,
+      });
+    }
+
+    const text = (payload.content || [])
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("\n")
+      .trim();
+
+    return res.status(200).json({ reply: text, facts: grounded.facts });
+  } catch (err) {
+    return res.status(502).json({
+      error: "Couldn't reach the AI reasoning service. Try again in a moment.",
+      details: String(err?.message || err),
+    });
+  }
+};

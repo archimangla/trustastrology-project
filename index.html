@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TrustAstrology AI — Moon Nakshatra Naming Reading</title>
+<meta name="description" content="Trace your baby's Moon Nakshatra and Pada from real birth-chart data, and read the traditional naming syllable it points to." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="sky" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <p class="eyebrow">TrustAstrology&nbsp;AI</p>
+    <h1>A name, traced from the Moon</h1>
+    <p class="sub">Vedic naming tradition says the Moon's Nakshatra at the hour of birth points to the syllable a child's name should begin with. Give the birth details below — we'll cast the chart and read it through with you.</p>
+  </header>
+
+  <main>
+    <!-- ===================== INTAKE LEDGER ===================== -->
+    <section id="intake" class="ledger" aria-labelledby="intake-heading">
+      <h2 id="intake-heading" class="ledger-title">Birth record</h2>
+
+      <form id="birth-form" novalidate>
+        <div class="row two">
+          <label class="field">
+            <span>Child's name</span>
+            <input type="text" name="name" required placeholder="e.g. Anaya" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>Gender</span>
+            <select name="gender" required>
+              <option value="">Select…</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row two">
+          <label class="field">
+            <span>Date of birth</span>
+            <input type="date" name="date" required />
+          </label>
+          <label class="field">
+            <span>Time of birth</span>
+            <input type="time" name="time" step="1" required />
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="field">
+            <span>Place of birth</span>
+            <select id="city-preset">
+              <option value="">Choose a city or set custom coordinates →</option>
+              <option value="custom">Custom / not listed</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row three mono-row">
+          <label class="field">
+            <span>Place name</span>
+            <input type="text" name="place" required placeholder="New Delhi" />
+          </label>
+          <label class="field">
+            <span>Latitude</span>
+            <input type="number" name="latitude" step="0.0001" required placeholder="28.6139" />
+          </label>
+          <label class="field">
+            <span>Longitude</span>
+            <input type="number" name="longitude" step="0.0001" required placeholder="77.2090" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="field narrow">
+            <span>Timezone offset (hrs from UTC)</span>
+            <input type="number" name="timezone" step="0.25" required placeholder="5.5" />
+          </label>
+        </div>
+
+        <p id="intake-error" class="error-line hidden" role="alert"></p>
+
+        <button type="submit" id="cast-btn" class="primary-btn">
+          <span class="btn-label">Cast the chart</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- ===================== READING (chart + chat) ===================== -->
+    <section id="reading" class="reading hidden" aria-labelledby="reading-heading">
+      <div class="chart-pane">
+        <p class="eyebrow small">Rashi chakra · D1</p>
+        <h2 id="reading-heading" class="chart-name">—</h2>
+        <svg id="d1-chart" viewBox="0 0 400 400" role="img" aria-label="Vedic birth chart"></svg>
+        <p class="chart-hint">Houses numbered from the Ascendant. The glowing house holds the Moon.</p>
+        <button id="new-chart-btn" class="ghost-btn">Cast a different chart</button>
+      </div>
+
+      <div class="chat-pane">
+        <p class="eyebrow small">The reading</p>
+        <div id="chat-thread" class="chat-thread" aria-live="polite"></div>
+
+        <form id="chat-form" class="chat-input-row">
+          <input id="chat-input" type="text" placeholder="Ask about this reading…" autocomplete="off" />
+          <button type="submit" class="primary-btn small">Ask</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Readings follow the traditional Swar Siddhanta naming table. For reflection and inspiration — not a substitute for a family priest or astrologer's full consultation.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
