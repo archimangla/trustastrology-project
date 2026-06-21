@@ -28,7 +28,16 @@ const PLANET_ABBR = {
 
 function abbrFor(planetName) {
   const key = String(planetName || "").toLowerCase();
-  return PLANET_ABBR[key] || (planetName || "?").slice(0, 2);
+  return PLANET_ABBR[key] || escapeHtml((planetName || "?").slice(0, 2));
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 const CITY_PRESETS = {

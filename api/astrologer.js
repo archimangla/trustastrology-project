@@ -92,6 +92,13 @@ module.exports = async (req, res) => {
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "Missing conversation messages." });
   }
+  if (messages.length > 40) {
+    return res.status(400).json({ error: "Conversation is too long. Start a new chart." });
+  }
+  const tooLong = messages.some((m) => typeof m?.content === "string" && m.content.length > 2000);
+  if (tooLong) {
+    return res.status(400).json({ error: "Message is too long (max 2000 characters)." });
+  }
 
   const grounded = buildGroundedFacts(chart);
   if (!grounded.ok) {

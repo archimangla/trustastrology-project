@@ -1,4 +1,3 @@
-
 const ASTRO_ENDPOINT =
   "https://astro-engine-serverfull-stage-838275484303.asia-south1.run.app/graphql/divisional_chart";
 
@@ -95,6 +94,9 @@ module.exports = async (req, res) => {
     .map(([k]) => k);
   if (missing.length) {
     return badRequest(res, `Missing required field(s): ${missing.join(", ")}`);
+  }
+  if (String(name).length > 120 || String(place).length > 200) {
+    return badRequest(res, "Name or place is too long.");
   }
 
   const variables = {
