@@ -140,6 +140,12 @@ main {
 
 .field.narrow { max-width: 320px; }
 
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  margin: -0.9rem 0 1.25rem;
+}
+
 .field input,
 .field select {
   background: #ffffff;
