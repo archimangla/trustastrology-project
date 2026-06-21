@@ -2,7 +2,7 @@ const { findNakshatra, getNamingSyllable } = require("../data/nakshatra-table");
 const { findRashi } = require("../data/rashi-table");
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL = "llama-3.3-70b-versatile";
+const MODEL = "openai/gpt-oss-120b";
 
 function findPlanet(chart, planetName) {
   const list = Array.isArray(chart?.planets) ? chart.planets : [];
