@@ -306,6 +306,13 @@ input:focus-visible {
   box-shadow: 0 16px 40px -28px rgba(170, 77, 104, 0.3);
 }
 
+.chat-prompt {
+  font-size: 0.95rem;
+  color: var(--ink-dim);
+  margin: 0 0 1rem;
+  line-height: 1.6;
+}
+
 .chat-thread {
   flex: 1;
   display: flex;

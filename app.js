@@ -98,6 +98,7 @@ const readingSection = document.getElementById("reading");
 const chartSvg = document.getElementById("d1-chart");
 const chartNameEl = document.getElementById("reading-heading");
 const chatThread = document.getElementById("chat-thread");
+const chatPrompt = document.getElementById("chat-prompt");
 const chatForm = document.getElementById("chat-form");
 const chatInput = document.getElementById("chat-input");
 const newChartBtn = document.getElementById("new-chart-btn");
@@ -165,7 +166,7 @@ form.addEventListener("submit", async (e) => {
     readingSection.classList.remove("hidden");
     readingSection.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    kickoffReading();
+    showChatPrompt();
   } catch (err) {
     showError(err.message || "Something went wrong casting the chart.");
   } finally {
@@ -190,6 +191,7 @@ newChartBtn.addEventListener("click", () => {
   intakeSection.classList.remove("hidden");
   state.chart = null;
   state.messages = [];
+  hideChatPrompt();
 });
 
 function renderChart(chart) {
@@ -287,15 +289,21 @@ async function sendToAPI() {
 
 function askAstrologer(userText) {
   if (userText) {
+    hideChatPrompt();
     state.messages.push({ role: "user", content: userText });
     appendEntry({ role: "user", who: "You", text: userText });
   }
   return sendToAPI();
 }
 
-function kickoffReading() {
-  state.messages.push({ role: "user", content: "Give me the Moon Nakshatra naming reading for this chart." });
-  sendToAPI();
+
+
+function showChatPrompt() {
+  chatPrompt.classList.remove("hidden");
+}
+
+function hideChatPrompt() {
+  chatPrompt.classList.add("hidden");
 }
 
 chatForm.addEventListener("submit", (e) => {
