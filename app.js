@@ -68,7 +68,7 @@ const HOUSES = [
   { points: "400,0 300,100 200,0", label: [294, 38] },              // 12
 ];
 
-const state = { chart: null, gender: "", messages: [] };
+const state = { chart: null, gender: "", enteredName: "", messages: [] };
 
 // Reads a fetch Response as JSON without throwing the cryptic
 // "Unexpected end of JSON input" error when the server sends back an
@@ -159,6 +159,7 @@ form.addEventListener("submit", async (e) => {
 
     state.chart = data.chart;
     state.gender = payload.gender;
+    state.enteredName = payload.name || "";
     state.messages = [];
     chatThread.innerHTML = "";
 
@@ -264,7 +265,12 @@ async function sendToAPI() {
     const res = await fetch("/api/astrologer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chart: state.chart, messages: state.messages, gender: state.gender }),
+      body: JSON.stringify({
+        chart: state.chart,
+        messages: state.messages,
+        gender: state.gender,
+        enteredName: state.enteredName,
+      }),
     });
     const data = await readJSON(res);
     loadingEntry.remove();

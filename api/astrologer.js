@@ -9,7 +9,17 @@ function findPlanet(chart, planetName) {
   return list.find((p) => String(p?.name || "").toLowerCase() === planetName.toLowerCase()) || null;
 }
 
-function buildGroundedFacts(chart) {
+function initialsFor(name) {
+  if (!name || typeof name !== "string") return null;
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0].toUpperCase())
+    .join("");
+}
+
+function buildGroundedFacts(chart, enteredName) {
   const moon = findPlanet(chart, "Moon");
   if (!moon) {
     return { ok: false, reason: "No Moon entry found in the chart data returned by the astrology service." };
@@ -25,11 +35,16 @@ function buildGroundedFacts(chart) {
 
   const syllable = getNamingSyllable(moon.nakshatra, moon.pada);
   const ascRashi = chart?.ascendant ? findRashi(chart.ascendant.rashi || chart.ascendant.sign) : null;
+  const chartNameInitials = initialsFor(chart?.name);
+  const enteredNameInitials = initialsFor(enteredName);
 
   return {
     ok: true,
     facts: {
-      childName: chart?.name || null,
+      childName: enteredName || chart?.name || null,
+      chartNameInitials,
+      enteredName: enteredName || null,
+      enteredNameInitials,
       moonSign: moon.sign || moon.rashi || null,
       moonNakshatra: nakEntry.name,
       moonPada: moon.pada,
@@ -47,6 +62,9 @@ function systemPromptFor(facts, gender) {
 
 Ground truth for this reading (computed deterministically from the birth chart, NOT from your own knowledge: treat these as the only facts you know about the chart):
 - Child's name on file: ${facts.childName || "not provided"}
+- Entered birth name: ${facts.enteredName || "not provided"}
+- Entered name initials: ${facts.enteredNameInitials || "not provided"}
+- Chart-rendered name initials: ${facts.chartNameInitials || "not provided"}
 - Moon Nakshatra: ${facts.moonNakshatra}
 - Moon Pada (quarter): ${facts.moonPada}
 - Naming syllable (Naam Akshar) for this exact nakshatra + pada: "${facts.namingSyllable}"
@@ -88,7 +106,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  const { chart, messages, gender } = body || {};
+  const { chart, messages, gender, enteredName } = body || {};
   if (!chart) return res.status(400).json({ error: "Missing chart data." });
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "Missing conversation messages." });
@@ -101,7 +119,7 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: "Message is too long (max 2000 characters)." });
   }
 
-  const grounded = buildGroundedFacts(chart);
+  const grounded = buildGroundedFacts(chart, enteredName);
   if (!grounded.ok) {
     return res.status(422).json({ error: grounded.reason });
   }
