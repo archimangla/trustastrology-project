@@ -96,6 +96,7 @@ const intakeError = document.getElementById("intake-error");
 const intakeSection = document.getElementById("intake");
 const readingSection = document.getElementById("reading");
 const chartSvg = document.getElementById("d1-chart");
+const chartPane = document.querySelector(".chart-pane");
 const chartNameEl = document.getElementById("reading-heading");
 const chatThread = document.getElementById("chat-thread");
 const chatPrompt = document.getElementById("chat-prompt");
@@ -161,9 +162,9 @@ form.addEventListener("submit", async (e) => {
     state.messages = [];
     chatThread.innerHTML = "";
 
-    renderChart(data.chart);
     intakeSection.classList.add("hidden");
     readingSection.classList.remove("hidden");
+    chartPane.classList.add("hidden");
     readingSection.scrollIntoView({ behavior: "smooth", block: "start" });
 
     showChatPrompt();
@@ -192,6 +193,7 @@ newChartBtn.addEventListener("click", () => {
   state.chart = null;
   state.messages = [];
   hideChatPrompt();
+  chartPane.classList.add("hidden");
 });
 
 function renderChart(chart) {
@@ -287,9 +289,18 @@ async function sendToAPI() {
   }
 }
 
+function ensureChartIsRendered() {
+  if (!state.chart) return;
+  if (chartPane.classList.contains("hidden")) {
+    renderChart(state.chart);
+    chartPane.classList.remove("hidden");
+  }
+}
+
 function askAstrologer(userText) {
   if (userText) {
     hideChatPrompt();
+    ensureChartIsRendered();
     state.messages.push({ role: "user", content: userText });
     appendEntry({ role: "user", who: "You", text: userText });
   }
