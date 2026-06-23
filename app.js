@@ -68,7 +68,7 @@ const HOUSES = [
   { points: "400,0 300,100 200,0", label: [294, 38] },              // 12
 ];
 
-const state = { chart: null, gender: "", enteredName: "", messages: [] };
+const state = { chart: null, gender: "", messages: [] };
 
 // Reads a fetch Response as JSON without throwing the cryptic
 // "Unexpected end of JSON input" error when the server sends back an
@@ -96,10 +96,8 @@ const intakeError = document.getElementById("intake-error");
 const intakeSection = document.getElementById("intake");
 const readingSection = document.getElementById("reading");
 const chartSvg = document.getElementById("d1-chart");
-const chartPane = document.querySelector(".chart-pane");
 const chartNameEl = document.getElementById("reading-heading");
 const chatThread = document.getElementById("chat-thread");
-const chatPrompt = document.getElementById("chat-prompt");
 const chatForm = document.getElementById("chat-form");
 const chatInput = document.getElementById("chat-input");
 const newChartBtn = document.getElementById("new-chart-btn");
@@ -159,16 +157,19 @@ form.addEventListener("submit", async (e) => {
 
     state.chart = data.chart;
     state.gender = payload.gender;
-    state.enteredName = payload.name || "";
     state.messages = [];
     chatThread.innerHTML = "";
 
+    renderChart(data.chart);
     intakeSection.classList.add("hidden");
     readingSection.classList.remove("hidden");
-    chartPane.classList.add("hidden");
     readingSection.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    showChatPrompt();
+    appendEntry({
+      role: "astrologer",
+      who: "Astrologer",
+      text: "Chart cast for " + (data.chart.name || "you") + ". Ask me anything: what your naming initial should be, whether your current name aligns with your chart, or name suggestions based on your nakshatra.",
+    });
   } catch (err) {
     showError(err.message || "Something went wrong casting the chart.");
   } finally {
@@ -193,8 +194,6 @@ newChartBtn.addEventListener("click", () => {
   intakeSection.classList.remove("hidden");
   state.chart = null;
   state.messages = [];
-  hideChatPrompt();
-  chartPane.classList.add("hidden");
 });
 
 function renderChart(chart) {
@@ -265,12 +264,7 @@ async function sendToAPI() {
     const res = await fetch("/api/astrologer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chart: state.chart,
-        messages: state.messages,
-        gender: state.gender,
-        enteredName: state.enteredName,
-      }),
+      body: JSON.stringify({ chart: state.chart, messages: state.messages, gender: state.gender }),
     });
     const data = await readJSON(res);
     loadingEntry.remove();
@@ -295,32 +289,12 @@ async function sendToAPI() {
   }
 }
 
-function ensureChartIsRendered() {
-  if (!state.chart) return;
-  if (chartPane.classList.contains("hidden")) {
-    renderChart(state.chart);
-    chartPane.classList.remove("hidden");
-  }
-}
-
 function askAstrologer(userText) {
   if (userText) {
-    hideChatPrompt();
-    ensureChartIsRendered();
     state.messages.push({ role: "user", content: userText });
     appendEntry({ role: "user", who: "You", text: userText });
   }
   return sendToAPI();
-}
-
-
-
-function showChatPrompt() {
-  chatPrompt.classList.remove("hidden");
-}
-
-function hideChatPrompt() {
-  chatPrompt.classList.add("hidden");
 }
 
 chatForm.addEventListener("submit", (e) => {
