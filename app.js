@@ -66,7 +66,7 @@ const HOUSES = [
   { points: "400,0 300,100 200,0", label: [294, 38] },              // 12
 ];
 
-const state = { chart: null, d2: null, d10: null, gender: "", messages: [] };
+const state = { chart: null, d2: null, d10: null, gender: "", userName: "", messages: [] };
 
 async function fetchDivisionalChart(payload, chartType) {
   try {
@@ -174,6 +174,7 @@ form.addEventListener("submit", async (e) => {
     state.d2 = null;
     state.d10 = null;
     state.gender = payload.gender;
+    state.userName = payload.name || "";
     state.messages = [];
     chatThread.innerHTML = "";
 
@@ -216,6 +217,7 @@ newChartBtn.addEventListener("click", () => {
   state.chart = null;
   state.d2 = null;
   state.d10 = null;
+  state.userName = "";
   state.messages = [];
 });
 
@@ -285,7 +287,7 @@ async function sendToAPI() {
     const res = await fetch("/api/astrologer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chart: state.chart, d2: state.d2, d10: state.d10, messages: state.messages, gender: state.gender }),
+      body: JSON.stringify({ chart: state.chart, d2: state.d2, d10: state.d10, messages: state.messages, gender: state.gender, userName: state.userName }),
     });
     const data = await readJSON(res);
     loadingEntry.remove();

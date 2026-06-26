@@ -101,10 +101,10 @@ function getNakshtraFacts(chart) {
 
 function tool_get_naming_reading(chart) { return getNakshtraFacts(chart); }
 
-function tool_check_name_compatibility(chart, args) {
+function tool_check_name_compatibility(chart, args, userName) {
   const facts = getNakshtraFacts(chart);
   if (!facts.ok) return facts;
-  const name = String(args.name || chart.name || "").trim();
+  const name = String(args.name || userName || "").trim();
   if (!name) return { ok: false, error: "No name found to check." };
   const syllable = facts.namingSyllable || "";
   return {
@@ -666,10 +666,10 @@ const TOOLS = [
 
 // ─── Tool runner ──────────────────────────────────────────────────────────────
 
-function runTool(toolName, args, chart, gender, d2, d10) {
+function runTool(toolName, args, chart, gender, d2, d10, userName) {
   switch (toolName) {
     case "get_naming_reading":        return tool_get_naming_reading(chart);
-    case "check_name_compatibility":  return tool_check_name_compatibility(chart, args);
+    case "check_name_compatibility":  return tool_check_name_compatibility(chart, args, userName);
     case "suggest_names":             return tool_suggest_names(chart, args, gender);
     case "get_marriage_timing":       return tool_get_marriage_timing(chart, args, gender);
     case "get_spouse_traits":         return tool_get_spouse_traits(chart, args, gender);
@@ -746,7 +746,7 @@ module.exports = async (req, res) => {
     catch { return res.status(400).json({ error: "Malformed request body." }); }
   }
 
-  const { chart, d2, d10, messages, gender } = body || {};
+  const { chart, d2, d10, messages, gender, userName } = body || {};
 
   if (!chart) return res.status(400).json({ error: "Missing chart data." });
   if (!Array.isArray(messages) || messages.length === 0) return res.status(400).json({ error: "Missing conversation messages." });
@@ -778,7 +778,7 @@ module.exports = async (req, res) => {
     let toolArgs = {};
     try { toolArgs = JSON.parse(toolCall.function.arguments || "{}"); } catch { /* leave empty */ }
 
-    const toolResult = runTool(toolCall.function.name, toolArgs, chart, gender, d2 || null, d10 || null);
+    const toolResult = runTool(toolCall.function.name, toolArgs, chart, gender, d2 || null, d10 || null, userName || null);
 
     const round2 = await fetch(GROQ_URL, {
       method: "POST",
