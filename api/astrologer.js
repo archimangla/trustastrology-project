@@ -541,6 +541,109 @@ function tool_get_overall_prosperity(chart) {
   };
 }
 
+// Career tools
+const NAK_CAREER_FIELD = {
+  "Ashwini":           { field: "Medicine, sports, athletics, rapid response roles", element: "Service & Healing" },
+  "Bharani":           { field: "Law, finance, entertainment, bold creative work", element: "Creative & Business" },
+  "Krittika":          { field: "Military, government, surgery, leadership roles", element: "Leadership & Admin" },
+  "Rohini":            { field: "Arts, luxury goods, agriculture, real estate, hospitality", element: "Creative & Business" },
+  "Mrigashira":        { field: "Research, writing, travel, sales, textiles", element: "Analytical & Technical" },
+  "Ardra":             { field: "IT, research, data analysis, storm or crisis management", element: "Analytical & Technical" },
+  "Punarvasu":         { field: "Teaching, publishing, counseling, architecture, restoration", element: "Service & Healing" },
+  "Pushya":            { field: "Banking, administration, food, nursing, social work", element: "Leadership & Admin" },
+  "Ashlesha":          { field: "Chemicals, medicine, intelligence services, psychology", element: "Analytical & Technical" },
+  "Magha":             { field: "Politics, management, heritage, executive roles", element: "Leadership & Admin" },
+  "Purva Phalguni":    { field: "Media, entertainment, luxury, beauty, music, diplomacy", element: "Creative & Business" },
+  "Uttara Phalguni":   { field: "Social service, management, contracts, public relations", element: "Leadership & Admin" },
+  "Hasta":             { field: "Healing, therapy, crafts, printing, precision work", element: "Service & Healing" },
+  "Chitra":            { field: "Engineering, architecture, design, jewelry, film making", element: "Analytical & Technical" },
+  "Swati":             { field: "Business, trading, sales, law, diplomacy, technology", element: "Creative & Business" },
+  "Vishakha":          { field: "Research, politics, focused expertise, biochemistry, activism", element: "Leadership & Admin" },
+  "Anuradha":          { field: "Foreign relations, organizational leadership, mass media", element: "Leadership & Admin" },
+  "Jyeshtha":          { field: "Administration, intelligence, crisis management, seniority roles", element: "Leadership & Admin" },
+  "Mula":              { field: "Research, medicine, philosophy, destruction and rebuilding", element: "Analytical & Technical" },
+  "Purva Ashadha":     { field: "Water industries, shipping, media, motivation, teaching", element: "Creative & Business" },
+  "Uttara Ashadha":    { field: "Military, government, administration, sports management", element: "Leadership & Admin" },
+  "Shravana":          { field: "Media, counseling, teaching, hospitality, NGO, listening roles", element: "Service & Healing" },
+  "Dhanishta":         { field: "Music, real estate, military, engineering, wealth management", element: "Creative & Business" },
+  "Shatabhisha":       { field: "Medical research, technology, astrology, aviation, hidden sciences", element: "Analytical & Technical" },
+  "Purva Bhadrapada":  { field: "Finance, occult, radical innovation, research", element: "Analytical & Technical" },
+  "Uttara Bhadrapada": { field: "Social service, spirituality, writing, large institutions", element: "Service & Healing" },
+  "Revati":            { field: "Counseling, travel, NGO work, marine industries, foreign trade", element: "Service & Healing" },
+};
+
+const PADA_ROLE = {
+  1: { navamsa: "Aries (Dharma)", style: "Initiator and pioneer. Best as entrepreneur, founder, or leader.", ideal: "startup founder, commanding officer, director" },
+  2: { navamsa: "Taurus (Artha)", style: "Executor and builder. Best in finance, production, and wealth-building roles.", ideal: "banker, real estate developer, CFO, production manager" },
+  3: { navamsa: "Gemini (Kama)", style: "Communicator and strategist. Best in sales, IT, media, or consulting.", ideal: "sales lead, IT architect, consultant, journalist" },
+  4: { navamsa: "Cancer (Moksha)", style: "Nurturer and healer. Best in teaching, medicine, social work, or service missions.", ideal: "teacher, doctor, NGO leader, spiritual guide" },
+};
+
+function tool_get_career_fields(d1Chart, d10Chart) {
+  const chart = d10Chart || d1Chart;
+  const ascRashiNum = getAscRashiNum(d1Chart);
+  if (!ascRashiNum) return { ok: false, error: "Ascendant data missing." };
+
+  const house10RashiId = rashiInHouse(ascRashiNum, 10);
+  const lord10Name = lordOf(house10RashiId);
+  const lord10Planet = lord10Name ? getPlanet(chart, lord10Name) : null;
+  const lord10Nakshatra = lord10Planet ? findNakshatra(lord10Planet.nakshatra) : null;
+
+  // Atmakaraka: planet with highest localDegree (excluding Rahu/Ketu)
+  const eligible = (d1Chart.planets || []).filter((p) => !["Rahu","Ketu"].includes(p.name) && p.localDegree !== undefined);
+  const atmakaraka = eligible.reduce((max, p) => Number(p.localDegree) > Number(max?.localDegree || 0) ? p : max, null);
+  const atmakNakshatra = atmakaraka ? findNakshatra(atmakaraka.nakshatra) : null;
+
+  const moon = getMoon(d1Chart);
+  const moonNakshatra = moon ? findNakshatra(moon.nakshatra) : null;
+
+  return {
+    ok: true,
+    usingD10: !!d10Chart,
+    house10Lord: lord10Name,
+    lord10House: lord10Planet ? Number(lord10Planet.houseNum) : null,
+    lord10Nakshatra: lord10Nakshatra ? lord10Nakshatra.name : null,
+    careerFieldFrom10thLord: lord10Nakshatra ? (NAK_CAREER_FIELD[lord10Nakshatra.name] || null) : null,
+    moon: { nakshatra: moonNakshatra ? moonNakshatra.name : null, careerField: moonNakshatra ? (NAK_CAREER_FIELD[moonNakshatra.name] || null) : null },
+    atmakaraka: { planet: atmakaraka ? atmakaraka.name : null, nakshatra: atmakNakshatra ? atmakNakshatra.name : null, careerField: atmakNakshatra ? (NAK_CAREER_FIELD[atmakNakshatra.name] || null) : null },
+    occupantsIn10th: planetsInHouse(chart, 10).map((p) => ({ name: p.name, nakshatra: p.nakshatra })),
+    note: d10Chart ? "Career fields from D10 (career divisional chart) -- more precise." : "D10 not yet loaded. Reading from D1 10th house. Results are approximate.",
+  };
+}
+
+function tool_get_career_role(d1Chart, d10Chart) {
+  const chart = d10Chart || d1Chart;
+  const ascRashiNum = getAscRashiNum(d1Chart);
+  if (!ascRashiNum) return { ok: false, error: "Ascendant data missing." };
+
+  const house10RashiId = rashiInHouse(ascRashiNum, 10);
+  const lord10Name = lordOf(house10RashiId);
+  const lord10Planet = lord10Name ? getPlanet(chart, lord10Name) : null;
+  if (!lord10Planet) return { ok: false, error: "10th house lord not found in chart." };
+
+  const pada = Number(lord10Planet.pada);
+  const nakEntry = findNakshatra(lord10Planet.nakshatra);
+
+  // Amatyakaraka: 2nd highest localDegree planet (Jaimini career significator)
+  const sorted = (d1Chart.planets || [])
+    .filter((p) => !["Rahu","Ketu"].includes(p.name) && p.localDegree !== undefined)
+    .sort((a, b) => Number(b.localDegree) - Number(a.localDegree));
+  const amatyakaraka = sorted[1] || null;
+  const amkNak = amatyakaraka ? findNakshatra(amatyakaraka.nakshatra) : null;
+
+  return {
+    ok: true,
+    usingD10: !!d10Chart,
+    lord10: lord10Name,
+    lord10Nakshatra: nakEntry ? nakEntry.name : (lord10Planet.nakshatra || null),
+    lord10Pada: pada,
+    workingStyle: PADA_ROLE[pada] || null,
+    amatyakaraka: { planet: amatyakaraka ? amatyakaraka.name : null, nakshatra: amkNak ? amkNak.name : null, careerField: amkNak ? (NAK_CAREER_FIELD[amkNak.name] || null) : null },
+    note: "Pada (quarter) of 10th lord shows HOW you work. Nakshatra shows WHAT field you thrive in.",
+  };
+}
+
+
 // ─── Tool registry ────────────────────────────────────────────────────────────
 
 const TOOLS = [
