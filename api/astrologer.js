@@ -644,6 +644,126 @@ function tool_get_career_role(d1Chart, d10Chart) {
 }
 
 
+
+// Education tool
+const NAK_EDUCATION_FIELD = {
+  "Ashwini":           { field: "Medicine, sports science, emergency response training", style: "Fast learner, practical" },
+  "Bharani":           { field: "Law, finance, performing arts, psychology", style: "Intense, driven" },
+  "Krittika":          { field: "Military science, surgery, metallurgy, government studies", style: "Sharp, disciplined" },
+  "Rohini":            { field: "Arts, agriculture, architecture, luxury design", style: "Creative, sensory" },
+  "Mrigashira":        { field: "Research, linguistics, travel, textile science", style: "Curious, restless" },
+  "Ardra":             { field: "Computer science, data science, engineering, storm/crisis research", style: "Analytical, unconventional" },
+  "Punarvasu":         { field: "Philosophy, teaching, publishing, architecture, restoration", style: "Broad, optimistic" },
+  "Pushya":            { field: "Banking, social work, nursing, education, administration", style: "Patient, methodical -- best for lifelong learning" },
+  "Ashlesha":          { field: "Chemistry, psychology, intelligence, occult sciences", style: "Deep, secretive, investigative" },
+  "Magha":             { field: "History, political science, management, heritage studies", style: "Authority-driven, traditional" },
+  "Purva Phalguni":    { field: "Fine arts, media, entertainment, diplomacy", style: "Expressive, pleasure-seeking" },
+  "Uttara Phalguni":   { field: "Social sciences, contracts, management, public service", style: "Cooperative, service-minded" },
+  "Hasta":             { field: "Healing arts, crafts, printing, precision engineering", style: "Dexterous, practical" },
+  "Chitra":            { field: "Architecture, engineering, design, cinematography", style: "Aesthetic, perfectionist" },
+  "Swati":             { field: "Business, law, diplomacy, technology, trading", style: "Independent, adaptable" },
+  "Vishakha":          { field: "Research, biochemistry, political science, activism", style: "Focused, goal-driven" },
+  "Anuradha":          { field: "Foreign languages, mass communication, organizational studies", style: "Collaborative, far-reaching" },
+  "Jyeshtha":          { field: "Occult, administration, intelligence, crisis management", style: "Senior, protective, intense" },
+  "Mula":              { field: "Philosophy, medicine, research, demolition sciences", style: "Root-seeking, radical" },
+  "Purva Ashadha":     { field: "Law, philosophy, water sciences, motivation, media", style: "Persuasive, idealistic" },
+  "Uttara Ashadha":    { field: "Military science, government, sports management, ethics", style: "Persistent, principled" },
+  "Shravana":          { field: "Education, counseling, media, hospitality, NGO work -- best for academic learning", style: "Attentive, patient, excellent listener" },
+  "Dhanishta":         { field: "Music, real estate, engineering, wealth management", style: "Rhythmic, ambitious" },
+  "Shatabhisha":       { field: "Medical research, technology, astrology, aviation, hidden sciences", style: "Scientific, solitary" },
+  "Purva Bhadrapada":  { field: "Finance, occult, radical innovation, philosophy", style: "Intense, transformative" },
+  "Uttara Bhadrapada": { field: "Spirituality, social service, writing, large institutions", style: "Calm, service-oriented" },
+  "Revati":            { field: "Foreign languages, travel, NGO, marine sciences, counseling", style: "Compassionate, imaginative" },
+};
+
+// 4th house = foundational education, 5th house = intellect/higher learning, 9th house = philosophy/higher education
+function tool_get_education_reading(d1Chart) {
+  const ascRashiNum = getAscRashiNum(d1Chart);
+  if (!ascRashiNum) return { ok: false, error: "Ascendant data missing." };
+
+  const house4RashiId = rashiInHouse(ascRashiNum, 4);
+  const house5RashiId = rashiInHouse(ascRashiNum, 5);
+  const house9RashiId = rashiInHouse(ascRashiNum, 9);
+
+  const lord4 = lordOf(house4RashiId);
+  const lord5 = lordOf(house5RashiId);
+  const lord9 = lordOf(house9RashiId);
+
+  const lord4Planet = lord4 ? getPlanet(d1Chart, lord4) : null;
+  const lord5Planet = lord5 ? getPlanet(d1Chart, lord5) : null;
+  const lord9Planet = lord9 ? getPlanet(d1Chart, lord9) : null;
+
+  const occupants4 = planetsInHouse(d1Chart, 4).map((p) => p.name);
+  const occupants5 = planetsInHouse(d1Chart, 5).map((p) => p.name);
+  const occupants9 = planetsInHouse(d1Chart, 9).map((p) => p.name);
+
+  const mercury = getPlanet(d1Chart, "Mercury");
+  const jupiter = getPlanet(d1Chart, "Jupiter");
+
+  // Mercury = intellect karaka, Jupiter = wisdom/higher education karaka
+  const mercuryStrong = mercury && [1, 2, 4, 5, 9, 10, 11].includes(Number(mercury.houseNum));
+  const jupiterStrong = jupiter && [1, 2, 4, 5, 9, 10, 11].includes(Number(jupiter.houseNum));
+
+  // Moon nakshatra for learning style
+  const moon = getMoon(d1Chart);
+  const moonNak = moon ? findNakshatra(moon.nakshatra) : null;
+  const moonPada = moon ? Number(moon.pada) : null;
+
+  // 5th lord nakshatra = intellect field
+  const lord5Nak = lord5Planet ? findNakshatra(lord5Planet.nakshatra) : null;
+  const lord5Pada = lord5Planet ? Number(lord5Planet.pada) : null;
+
+  // 9th lord nakshatra = higher education field
+  const lord9Nak = lord9Planet ? findNakshatra(lord9Planet.nakshatra) : null;
+
+  // Pada learning style mapping
+  const padaLearningStyle = {
+    1: "hands-on, action-oriented, best in technical and engineering subjects -- Fire energy (Aries navamsa)",
+    2: "steady builder, best in finance, material science, vocational skills -- Earth energy (Taurus navamsa)",
+    3: "intellectual analyst, best in communication, IT, research, academics -- Air energy (Gemini navamsa)",
+    4: "intuitive and deep, best in spiritual, psychological, service-oriented fields -- Water energy (Cancer navamsa)",
+  };
+
+  // Obstacles: lords in dusthana
+  const obstacles = [];
+  if (lord5Planet && [6, 8, 12].includes(Number(lord5Planet.houseNum))) obstacles.push("5th lord in dusthana -- interruptions in education, needs extra effort");
+  if (lord9Planet && [6, 8, 12].includes(Number(lord9Planet.houseNum))) obstacles.push("9th lord in dusthana -- higher education may be delayed or require foreign pursuit");
+  if (occupants5.includes("Ketu")) obstacles.push("Ketu in 5th -- unconventional learning path, may drop formal education for self-study");
+  if (occupants5.includes("Saturn")) obstacles.push("Saturn in 5th -- slow but deep learner, late academic achievements");
+  if (occupants5.includes("Rahu")) obstacles.push("Rahu in 5th -- obsessive focus on one subject, may excel in unconventional or foreign fields");
+
+  const strengths = [];
+  if (occupants5.includes("Jupiter")) strengths.push("Jupiter in 5th -- exceptional intellect, natural academic, blessed in higher learning");
+  if (occupants5.includes("Mercury")) strengths.push("Mercury in 5th -- sharp analytical mind, excellent in communication and technical fields");
+  if (occupants9.includes("Jupiter")) strengths.push("Jupiter in 9th -- strong higher education, philosophy, law, or spiritual study");
+  if (mercuryStrong) strengths.push(`Mercury in house ${mercury.houseNum} -- strong intellectual faculty`);
+  if (jupiterStrong) strengths.push(`Jupiter in house ${jupiter.houseNum} -- natural wisdom, supports academic success`);
+
+  return {
+    ok: true,
+    educationHouses: {
+      house4: { lord: lord4, lordHouse: lord4Planet ? Number(lord4Planet.houseNum) : null, occupants: occupants4, note: "foundational/school education" },
+      house5: { lord: lord5, lordHouse: lord5Planet ? Number(lord5Planet.houseNum) : null, lordNakshatra: lord5Nak ? lord5Nak.name : null, lordPada: lord5Pada, occupants: occupants5, note: "intellect, creativity, higher studies" },
+      house9: { lord: lord9, lordHouse: lord9Planet ? Number(lord9Planet.houseNum) : null, lordNakshatra: lord9Nak ? lord9Nak.name : null, occupants: occupants9, note: "philosophy, higher education, foreign study" },
+    },
+    intellect: {
+      mercury: { house: mercury ? Number(mercury.houseNum) : null, nakshatra: mercury ? mercury.nakshatra : null, strong: mercuryStrong },
+      jupiter: { house: jupiter ? Number(jupiter.houseNum) : null, nakshatra: jupiter ? jupiter.nakshatra : null, strong: jupiterStrong },
+    },
+    learningStyleFromMoon: {
+      nakshatra: moonNak ? moonNak.name : null,
+      pada: moonPada,
+      style: moonPada ? padaLearningStyle[moonPada] : null,
+      field: moonNak ? (NAK_EDUCATION_FIELD[moonNak.name] || null) : null,
+    },
+    fieldFrom5thLord: lord5Nak ? (NAK_EDUCATION_FIELD[lord5Nak.name] || null) : null,
+    fieldFrom9thLord: lord9Nak ? (NAK_EDUCATION_FIELD[lord9Nak.name] || null) : null,
+    strengths,
+    obstacles,
+    note: "4th house = school/foundational learning. 5th house = intellect and college. 9th house = higher education, philosophy, foreign study. Mercury = intelligence karaka. Jupiter = wisdom karaka.",
+  };
+}
+
 // ─── Tool registry ────────────────────────────────────────────────────────────
 
 const TOOLS = [
@@ -662,6 +782,7 @@ const TOOLS = [
   { type: "function", function: { name: "get_overall_prosperity", description: "Lifetime prosperity arc -- how wealth builds over a lifetime, retirement and property wealth. Use when user asks about long-term financial future.", parameters: { type: "object", properties: {}, required: [] } } },
   { type: "function", function: { name: "get_career_fields", description: "Identify career fields and industries suited to the person based on 10th house lord and Moon nakshatra. Uses D10 chart if available. Use when user asks what career, profession, or industry suits them.", parameters: { type: "object", properties: {}, required: [] } } },
   { type: "function", function: { name: "get_career_role", description: "Identify the specific working style and role type from the 10th lord Pada and Amatyakaraka. Use when user asks what kind of work they do best, their working style, or specific job roles.", parameters: { type: "object", properties: {}, required: [] } } },
+  { type: "function", function: { name: "get_education_reading", description: "Analyze the chart for education -- learning style, suitable fields of study, intellect strength, higher education prospects, and obstacles. Use when user asks about education, studies, what to study, academic prospects, or higher education.", parameters: { type: "object", properties: {}, required: [] } } },
 ];
 
 // ─── Tool runner ──────────────────────────────────────────────────────────────
@@ -683,6 +804,7 @@ function runTool(toolName, args, chart, gender, d2, d10, userName) {
     case "get_overall_prosperity":    return tool_get_overall_prosperity(chart, d2);
     case "get_career_fields":         return tool_get_career_fields(chart, d10);
     case "get_career_role":           return tool_get_career_role(chart, d10);
+    case "get_education_reading":      return tool_get_education_reading(chart);
     default: return { error: `Unknown tool: ${toolName}` };
   }
 }
@@ -709,6 +831,7 @@ TOOL SELECTION:
 - "when will I get rich / financial turning point" -> get_wealth_timing
 - "what career field suits me / what industry" -> get_career_fields
 - "what kind of work do I do best / working style / job role" -> get_career_role
+- "education / what to study / academic prospects / higher education" -> get_education_reading
 - "what profession / career / income source / where money comes from" -> get_income_sources
 - "financial problems / debt / losses" -> get_financial_challenges
 - "long-term wealth / retirement / overall prosperity" -> get_overall_prosperity
