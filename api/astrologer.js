@@ -648,7 +648,7 @@ function tool_get_career_role(d1Chart, d10Chart) {
 
 const TOOLS = [
   { type: "function", function: { name: "get_naming_reading", description: "Get Moon Nakshatra, Pada, and Vedic naming syllable. Use when user asks about their nakshatra, name initial, or naming reading.", parameters: { type: "object", properties: {}, required: [] } } },
-  { type: "function", function: { name: "check_name_compatibility", description: "Check if a name matches the user's Moon nakshatra syllable. Use when user asks if their name suits their chart.", parameters: { type: "object", properties: { name: { type: "string", description: "Name to check. Leave empty to use the chart name." } }, required: [] } } },
+  { type: "function", function: { name: "check_name_compatibility", description: "Check if the person's name matches their Moon nakshatra syllable. IMPORTANT: NEVER pass a name argument. The system already has the name from the birth form. Always call with empty arguments {}. The tool result will contain the name and the compatibility result.", parameters: { type: "object", properties: {}, required: [] } } },
   { type: "function", function: { name: "suggest_names", description: "Suggest names matching the user's naming syllable. Use when user asks for name recommendations.", parameters: { type: "object", properties: { gender: { type: "string", enum: ["Male", "Female", "Any"] } }, required: [] } } },
   { type: "function", function: { name: "get_marriage_timing", description: "Predict WHEN marriage is likely -- delay/early indicators and which dashas trigger it. Use when user asks at what age they will marry.", parameters: { type: "object", properties: { gender: { type: "string", enum: ["Male", "Female", "Unknown"] } }, required: [] } } },
   { type: "function", function: { name: "get_spouse_traits", description: "Describe the likely traits, nature, and background of the spouse, and HOW they will meet. Use when user asks what their future husband/wife will be like.", parameters: { type: "object", properties: { gender: { type: "string", enum: ["Male", "Female", "Unknown"] } }, required: [] } } },
@@ -689,9 +689,15 @@ function runTool(toolName, args, chart, gender, d2, d10, userName) {
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are an expert Vedic (Jyotish) astrologer. A D1 birth chart has been cast for the user.
+function buildSystemPrompt(userName) {
+  const nameContext = userName
+    ? `The person's name as entered on the birth form is "${userName}". You already have their name -- NEVER ask the user for their name.`
+    : "";
+  return `You are an expert Vedic (Jyotish) astrologer. A D1 birth chart has been cast for the user. ${nameContext}
 
 You have 13 focused tools. Pick the ONE most specific tool for the question. Never answer astrological questions from memory -- always call a tool first.
+
+CRITICAL NAME RULE: When check_name_compatibility returns a result, the "name" field in the result already contains the person's name. Use it directly. NEVER ask the user what their name is. NEVER say you need their name.
 
 TOOL SELECTION:
 - "when will I marry / what age" -> get_marriage_timing
@@ -707,7 +713,7 @@ TOOL SELECTION:
 - "financial problems / debt / losses" -> get_financial_challenges
 - "long-term wealth / retirement / overall prosperity" -> get_overall_prosperity
 - "nakshatra / naming syllable" -> get_naming_reading
-- "is my name compatible" -> check_name_compatibility
+- "is my name compatible / does my name match" -> check_name_compatibility (call with NO arguments -- name comes from the tool result)
 - "suggest names" -> suggest_names
 
 RESPONSE FORMAT -- STRICT:
@@ -728,6 +734,7 @@ RULES:
 - Frame as tendencies, never absolute predictions.
 - Saturn/Rahu delays: phrase as "a little later than average" not doom.
 - Manglik dosha: calm, mention remedies exist, do not alarm.`;
+}
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
@@ -763,7 +770,7 @@ module.exports = async (req, res) => {
     const round1 = await fetch(GROQ_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ model: MODEL, max_tokens: 1000, messages: [{ role: "system", content: SYSTEM_PROMPT }, ...chatMessages], tools: TOOLS, tool_choice: "auto" }),
+      body: JSON.stringify({ model: MODEL, max_tokens: 1000, messages: [{ role: "system", content: buildSystemPrompt(userName) }, ...chatMessages], tools: TOOLS, tool_choice: "auto" }),
     });
 
     const payload1 = await round1.json();
@@ -786,7 +793,7 @@ module.exports = async (req, res) => {
       body: JSON.stringify({
         model: MODEL, max_tokens: 1000,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: buildSystemPrompt(userName) },
           ...chatMessages,
           { role: "assistant", content: message1.content || null, tool_calls: message1.tool_calls },
           { role: "tool", tool_call_id: toolCall.id, content: JSON.stringify(toolResult) },
