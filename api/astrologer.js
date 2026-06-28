@@ -788,24 +788,172 @@ const TOOLS = [
 // ─── Tool runner ──────────────────────────────────────────────────────────────
 
 function runTool(toolName, args, chart, gender, d2, d10, userName) {
+  const withFinalAnswer = (result) => ({
+    ...result,
+    finalAnswer: buildFinalAnswer(toolName, result),
+  });
+
+  let result;
   switch (toolName) {
-    case "get_naming_reading":        return tool_get_naming_reading(chart);
-    case "check_name_compatibility":  return tool_check_name_compatibility(chart, args, userName);
-    case "suggest_names":             return tool_suggest_names(chart, args, gender);
-    case "get_marriage_timing":       return tool_get_marriage_timing(chart, args, gender);
-    case "get_spouse_traits":         return tool_get_spouse_traits(chart, args, gender);
-    case "check_manglik_dosha":       return tool_check_manglik_dosha(chart);
-    case "get_marriage_quality":      return tool_get_marriage_quality(chart);
-    case "get_children_reading":      return tool_get_children_reading(chart, args, gender);
-    case "get_wealth_potential":      return tool_get_wealth_potential(chart, d2);
-    case "get_wealth_timing":         return tool_get_wealth_timing(chart);
-    case "get_income_sources":        return tool_get_income_sources(chart, d10);
-    case "get_financial_challenges":  return tool_get_financial_challenges(chart, d2);
-    case "get_overall_prosperity":    return tool_get_overall_prosperity(chart, d2);
-    case "get_career_fields":         return tool_get_career_fields(chart, d10);
-    case "get_career_role":           return tool_get_career_role(chart, d10);
-    case "get_education_reading":      return tool_get_education_reading(chart);
-    default: return { error: `Unknown tool: ${toolName}` };
+    case "get_naming_reading":        result = tool_get_naming_reading(chart); break;
+    case "check_name_compatibility":  result = tool_check_name_compatibility(chart, args, userName); break;
+    case "suggest_names":             result = tool_suggest_names(chart, args, gender); break;
+    case "get_marriage_timing":       result = tool_get_marriage_timing(chart, args, gender); break;
+    case "get_spouse_traits":         result = tool_get_spouse_traits(chart, args, gender); break;
+    case "check_manglik_dosha":       result = tool_check_manglik_dosha(chart); break;
+    case "get_marriage_quality":      result = tool_get_marriage_quality(chart); break;
+    case "get_children_reading":      result = tool_get_children_reading(chart, args, gender); break;
+    case "get_wealth_potential":      result = tool_get_wealth_potential(chart, d2); break;
+    case "get_wealth_timing":         result = tool_get_wealth_timing(chart); break;
+    case "get_income_sources":        result = tool_get_income_sources(chart, d10); break;
+    case "get_financial_challenges":  result = tool_get_financial_challenges(chart, d2); break;
+    case "get_overall_prosperity":    result = tool_get_overall_prosperity(chart, d2); break;
+    case "get_career_fields":         result = tool_get_career_fields(chart, d10); break;
+    case "get_career_role":           result = tool_get_career_role(chart, d10); break;
+    case "get_education_reading":     result = tool_get_education_reading(chart); break;
+    default: return { ok: false, error: `Unknown tool: ${toolName}`, finalAnswer: `Unknown tool: ${toolName}` };
+  }
+  return withFinalAnswer(result);
+}
+
+function firstNonEmpty(items, fallback) {
+  return (items || []).find((item) => item !== undefined && item !== null && String(item).trim()) || fallback;
+}
+
+function listText(items, fallback = "the relevant dasha") {
+  const clean = [...new Set((items || []).filter(Boolean))];
+  if (clean.length === 0) return fallback;
+  if (clean.length === 1) return clean[0];
+  return `${clean.slice(0, -1).join(", ")} or ${clean[clean.length - 1]}`;
+}
+
+function timingWindow(result) {
+  const delays = (result.delayIndicators || []).length;
+  const supportsEarly = (result.favorsEarlyMarriage || []).length;
+  if (delays >= 2) return "29-34";
+  if (delays === 1) return "28-32";
+  if (supportsEarly > 0) return "23-27";
+  return "26-30";
+}
+
+function lordHouseMeaning(lord, house) {
+  const byHouse = {
+    1: `${lord} as 7th lord in the 1st makes partnership a central life theme and brings the spouse strongly into your personal world`,
+    2: `${lord} as 7th lord in the 2nd supports marriage through family, speech, savings, and settled domestic life`,
+    3: `${lord} as 7th lord in the 3rd points to a communicative partner and connection through siblings, travel, media, or effort`,
+    4: `${lord} as 7th lord in the 4th supports domestic stability, property, home comforts, and emotional bonding after marriage`,
+    5: `${lord} as 7th lord in the 5th favors romance, attraction, creativity, and love-marriage tendencies`,
+    6: `${lord} as 7th lord in the 6th shows disputes, delay, or adjustment before marriage settles`,
+    7: `${lord} as 7th lord in the 7th strengthens marriage itself and makes partnership a major destiny area`,
+    8: `${lord} as 7th lord in the 8th gives intense transformation through marriage and needs patience with sudden changes`,
+    9: `${lord} as 7th lord in the 9th links marriage with fortune, higher education, dharma, travel, or a different culture`,
+    10: `${lord} as 7th lord in the 10th connects marriage with career, public life, status, or meeting through work`,
+    11: `${lord} as 7th lord in the 11th supports gains after marriage and connection through friends or networks`,
+    12: `${lord} as 7th lord in the 12th points to foreign links, distance, privacy, or extra adjustment in married life`,
+  };
+  return byHouse[Number(house)] || `${lord} as 7th lord gives the main marriage clue in this chart`;
+}
+
+function buildFinalAnswer(toolName, result) {
+  if (!result || result.ok === false) return result?.error || "I could not complete this calculation from the available chart data.";
+
+  switch (toolName) {
+    case "get_naming_reading":
+      return `Your Moon nakshatra is ${result.moonNakshatra}, pada ${result.moonPada}, so the classical naming syllable is "${result.namingSyllable}". Names beginning with this sound are considered aligned with the birth nakshatra. Want to check whether your current name matches it?`;
+
+    case "check_name_compatibility":
+      return result.isCompatible
+        ? `${result.name} is compatible with the Moon nakshatra naming rule because it begins with the "${result.namingSyllable}" sound from ${result.moonNakshatra} pada ${result.moonPada}. This is a direct match by the Janma Nakshatra syllable method. Want name suggestions from the same syllable?`
+        : `${result.name} does not strictly match the Moon nakshatra naming syllable "${result.namingSyllable}" from ${result.moonNakshatra} pada ${result.moonPada}. This does not make the name bad, but by the classical syllable rule it is not the exact starting sound. Want compatible name options?`;
+
+    case "suggest_names":
+      return `Use names beginning with "${result.namingSyllable}" for this chart; that is the syllable for ${result.moonNakshatra} pada ${result.moonPada}. The full pada syllables for this nakshatra are ${result.allPadaSyllables.join(", ")}. Want to check one specific name against it?`;
+
+    case "get_marriage_timing": {
+      const dashas = listText(result.marriageActivatingDashas, "Venus or the 7th lord");
+      const reason = firstNonEmpty(result.delayIndicators, firstNonEmpty(result.favorsEarlyMarriage, lordHouseMeaning(result.house7Lord, result.house7LordPosition)));
+      return `Marriage is most likely around age ${timingWindow(result)}, especially during ${dashas} dasha or antardasha. ${reason}. Want to know what your spouse may be like?`;
+    }
+
+    case "get_spouse_traits":
+      return `Your spouse is likely to be ${result.spouseTemperament}, with the relationship connecting ${result.howYouMeet}. ${lordHouseMeaning(result.house7Lord, result.lord7House)}. Want to know the likely marriage timing?`;
+
+    case "check_manglik_dosha": {
+      if (!result.isManglik) return `You are not Manglik by the standard Mars house rule because Mars is in the ${result.marsHouse}th house. ${result.partnerNote} Want to know overall marriage quality?`;
+      const cancel = result.cancellations.length ? ` A cancellation applies: ${result.cancellations[0]}.` : "";
+      return `Manglik dosha is present with ${result.severity.toLowerCase()} intensity because Mars is in the ${result.marsHouse}th house.${cancel} Matching and traditional remedies can reduce concern, so this should be treated calmly. Want to know marriage timing?`;
+    }
+
+    case "get_marriage_quality": {
+      const core = result.divorceRiskIndicators.length
+        ? "Marriage needs conscious effort because separation or conflict indicators are present"
+        : "Marriage has a stable long-term promise";
+      const reason = firstNonEmpty(result.harmonyFactors, firstNonEmpty(result.conflictFactors, lordHouseMeaning(result.house7Lord, result.lord7Position)));
+      return `${core}. ${reason}. Want to know your spouse traits?`;
+    }
+
+    case "get_children_reading": {
+      const outcome = result.obstacleFactors.length > result.favorableFactors.length
+        ? "Children are possible, but parenthood may come after delay or extra effort"
+        : "Children prospects are favorable in this chart";
+      const reason = firstNonEmpty(result.favorableFactors, firstNonEmpty(result.obstacleFactors, `Jupiter is in house ${result.jupiterHouse || "unknown"}, which is checked as the children karaka`));
+      return `${outcome}. ${reason}. Want to know the best timing for family growth?`;
+    }
+
+    case "get_wealth_potential": {
+      const yogas = [];
+      if (result.yogas?.dhanaYoga) yogas.push("Dhana Yoga");
+      if (result.yogas?.chandraMangalaYoga) yogas.push("Chandra-Mangala Yoga");
+      if (result.yogas?.lakshmiyoga) yogas.push("Lakshmi Yoga");
+      const verdict = yogas.length ? `Your chart shows strong wealth potential through ${listText(yogas)}.` : "Your chart shows steady wealth potential that improves through discipline and the right dasha periods.";
+      const reason = result.house2?.benefics?.length
+        ? `${result.house2.benefics.join(", ")} supports the 2nd house of savings`
+        : `The 2nd lord ${result.house2?.lord} and 11th lord ${result.house11?.lord} set the main wealth pattern`;
+      return `${verdict} ${reason}. Want to know the age when money improves most?`;
+    }
+
+    case "get_wealth_timing": {
+      const peaks = (result.peakWealthPeriods || []).slice(0, 3).map((p) => `${p.planet} dasha, age ${p.fromAge}-${p.toAge}`);
+      return `The strongest money windows are ${listText(peaks, "during Jupiter, Venus, 2nd lord, or 11th lord periods")}. These are the dashas connected with wealth houses and natural prosperity planets in this chart. Want to know your income sources?`;
+    }
+
+    case "get_income_sources": {
+      const fields = result.professionFrom10thLord?.fields || firstNonEmpty(result.professionsFromPlanetsIn10th?.map((p) => p.fields), "business, service, or mixed income sources");
+      const extras = result.multipleIncomeStreams ? " Multiple income streams are likely." : "";
+      return `Your income is most likely to come through ${fields}.${extras} The 10th lord is ${result.house10Lord}, which gives the main profession signature. Want to know your best career field?`;
+    }
+
+    case "get_financial_challenges": {
+      if ((result.challenges || []).length === 0) return `Major debt or loss indicators are not prominent in this chart. ${firstNonEmpty(result.protections, "The difficult finance houses do not show a strong harmful pattern")}. Want to know your wealth potential?`;
+      return `The main financial caution is ${result.challenges[0]}. ${firstNonEmpty(result.protections, "Careful planning is needed around debt, sudden expenses, and losses")}. Want to know where income is strongest?`;
+    }
+
+    case "get_overall_prosperity": {
+      const tier = result.overallProsperityTier === "Needs remedies and focused effort" ? "gradual and effort-based" : result.overallProsperityTier.toLowerCase();
+      const property = result.propertyWealth ? " Property wealth is supported." : "";
+      return `Your lifetime prosperity pattern is ${tier}, with wealth building in phases rather than all at once.${property} Jupiter and Saturn periods are the main long-term accumulation triggers. Want to know your strongest money ages?`;
+    }
+
+    case "get_career_fields": {
+      const primary = result.careerFieldFrom10thLord?.field || result.moon?.careerField?.field || result.atmakaraka?.careerField?.field || "mixed professional fields";
+      const source = result.usingD10 ? "D10 career chart" : "D1 10th house";
+      return `The best career fields are ${primary}. This comes from the ${source}, especially the 10th lord ${result.house10Lord} and its nakshatra. Want to know the exact role style that suits you?`;
+    }
+
+    case "get_career_role": {
+      const style = result.workingStyle?.style || "A flexible role style suits you, combining analysis, communication, and responsibility.";
+      const ideal = result.workingStyle?.ideal ? ` Good examples are ${result.workingStyle.ideal}.` : "";
+      return `${style}${ideal} This comes from the pada of the 10th lord ${result.lord10} in ${result.lord10Nakshatra}. Want to know suitable industries?`;
+    }
+
+    case "get_education_reading": {
+      const field = result.fieldFrom5thLord?.field || result.fieldFrom9thLord?.field || result.learningStyleFromMoon?.field?.field || "a balanced academic path";
+      const strength = firstNonEmpty(result.strengths, firstNonEmpty(result.obstacles, result.learningStyleFromMoon?.style));
+      return `Your chart supports study in ${field}. ${strength}. Want to know which career field this education can lead to?`;
+    }
+
+    default:
+      return "The tool completed its calculation, but no final-answer formatter exists for this tool yet.";
   }
 }
 
@@ -817,7 +965,7 @@ function buildSystemPrompt(userName) {
     : "";
   return `You are an expert Vedic (Jyotish) astrologer. A D1 birth chart has been cast for the user. ${nameContext}
 
-You have 13 focused tools. Pick the ONE most specific tool for the question. Never answer astrological questions from memory -- always call a tool first.
+You have focused Jyotish tools. Pick the ONE most specific tool for the question. Never answer astrological questions from memory -- always call a tool first.
 
 CRITICAL NAME RULE: When check_name_compatibility returns a result, the "name" field in the result already contains the person's name. Use it directly. NEVER ask the user what their name is. NEVER say you need their name.
 
@@ -839,24 +987,8 @@ TOOL SELECTION:
 - "is my name compatible / does my name match" -> check_name_compatibility (call with NO arguments -- name comes from the tool result)
 - "suggest names" -> suggest_names
 
-RESPONSE FORMAT -- STRICT:
-1. DIRECT ANSWER FIRST. One or two sentences. The actual answer to what they asked. No preamble.
-2. Then ONE supporting reason from the tool result. One sentence only.
-3. End with ONE short follow-up offer: "Want to know [related thing]?"
-That is the entire response. No tables. No bullet lists. No headers. No mantras. No remedies unless the user asks.
-
-EXAMPLES of correct length:
-- "When will I marry?" -> "Your strongest marriage window is during your Mercury or Venus dasha, likely in your late 20s to early 30s. Mercury, your 7th house lord, sits in the 6th house which adds some delay before things settle. Want to know what your future partner will be like?"
-- "How wealthy will I be?" -> "Your chart shows solid wealth potential through a Dhana Yoga between your 2nd and 11th lords. The peak earning period comes during your Jupiter dasha. Want to know at what age that period hits?"
-
-RULES:
-- No markdown tables ever.
-- No bullet points unless the user explicitly asks for a breakdown.
-- No unsolicited remedies or mantras.
-- Warm plain language. Explain any Sanskrit term in 3 words inline, not in a separate section.
-- Frame as tendencies, never absolute predictions.
-- Saturn/Rahu delays: phrase as "a little later than average" not doom.
-- Manglik dosha: calm, mention remedies exist, do not alarm.`;
+CRITICAL RESPONSE RULE:
+Your only job is tool selection. Do not interpret chart data, do not summarize the tool result, and do not write the final astrology answer. The server will return the tool's finalAnswer string directly to the user.`;
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -901,7 +1033,9 @@ module.exports = async (req, res) => {
 
     const message1 = payload1.choices?.[0]?.message;
     if (!message1?.tool_calls || message1.tool_calls.length === 0) {
-      return res.status(200).json({ reply: (message1?.content || "").trim() });
+      return res.status(200).json({
+        reply: "Please ask one specific astrology question, like marriage timing, spouse traits, wealth, career, education, children, Manglik dosha, or naming.",
+      });
     }
 
     const toolCall = message1.tool_calls[0];
@@ -909,26 +1043,9 @@ module.exports = async (req, res) => {
     try { toolArgs = JSON.parse(toolCall.function.arguments || "{}"); } catch { /* leave empty */ }
 
     const toolResult = runTool(toolCall.function.name, toolArgs, chart, gender, d2 || null, d10 || null, userName || null);
-
-    const round2 = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: MODEL, max_tokens: 1000,
-        messages: [
-          { role: "system", content: buildSystemPrompt(userName) },
-          ...chatMessages,
-          { role: "assistant", content: message1.content || null, tool_calls: message1.tool_calls },
-          { role: "tool", tool_call_id: toolCall.id, content: JSON.stringify(toolResult) },
-        ],
-        tools: TOOLS, tool_choice: "auto",
-      }),
+    return res.status(200).json({
+      reply: toolResult.finalAnswer,
     });
-
-    const payload2 = await round2.json();
-    if (!round2.ok) return res.status(502).json({ error: "AI service error.", details: payload2?.error?.message || payload2 });
-
-    return res.status(200).json({ reply: (payload2.choices?.[0]?.message?.content || "").trim() });
 
   } catch (err) {
     return res.status(502).json({ error: "Couldn't reach the AI reasoning service. Try again in a moment.", details: String(err?.message || err) });
