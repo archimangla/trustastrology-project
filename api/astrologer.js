@@ -370,7 +370,10 @@ function tool_get_wealth_potential(chart, d2) {
   const moonNak = moon ? findNakshatra(moon.nakshatra) : null;
   const wealthNaks = ["Rohini", "Pushya", "Dhanishta"];
   const moonInWealthNak = moonNak && wealthNaks.some((w) => moonNak.name.includes(w));
-  const v={house2: { lord: lord2, lordHouse: lord2Planet ? Number(lord2Planet.houseNum) : null, occupants: occupants2, benefics: occupants2.filter((n) => BENEFICS.includes(n)), lordAfflicted: lord2Planet && [6, 8, 12].includes(Number(lord2Planet.houseNum)) },
+  
+  return {
+    ok: true,
+    house2: { lord: lord2, lordHouse: lord2Planet ? Number(lord2Planet.houseNum) : null, occupants: occupants2, benefics: occupants2.filter((n) => BENEFICS.includes(n)), lordAfflicted: lord2Planet && [6, 8, 12].includes(Number(lord2Planet.houseNum)) },
     house11: { lord: lord11, lordHouse: lord11Planet ? Number(lord11Planet.houseNum) : null, occupants: occupants11, benefics: occupants11.filter((n) => BENEFICS.includes(n)), lordAfflicted: lord11Planet && [6, 8, 12].includes(Number(lord11Planet.houseNum)) },
     yogas: { dhanaYoga: dhanYoga, chandraMangalaYoga: chandraMangala, lakshmiyoga },
     jupiter: { house: jupiter ? Number(jupiter.houseNum) : null, nakshatra: jupiter ? jupiter.nakshatra : null },
@@ -378,20 +381,7 @@ function tool_get_wealth_potential(chart, d2) {
     moonInWealthNakshatra: moonInWealthNak, moonNakshatra: moonNak ? moonNak.name : null,
     d2Available: !!d2,
     d2AscendantSign: d2 ? (d2.ascendant?.sign || d2.ascendant?.rashi || null) : null,
-    note: d2 ? "D2 (Hora chart) loaded -- ascendant sign confirms wealth accumulation tendency." : "D2 chart not yet loaded. Wealth read from D1 only."}
-    console.log(v)
-    return {
-    ok: true,
-    // house2: { lord: lord2, lordHouse: lord2Planet ? Number(lord2Planet.houseNum) : null, occupants: occupants2, benefics: occupants2.filter((n) => BENEFICS.includes(n)), lordAfflicted: lord2Planet && [6, 8, 12].includes(Number(lord2Planet.houseNum)) },
-    // house11: { lord: lord11, lordHouse: lord11Planet ? Number(lord11Planet.houseNum) : null, occupants: occupants11, benefics: occupants11.filter((n) => BENEFICS.includes(n)), lordAfflicted: lord11Planet && [6, 8, 12].includes(Number(lord11Planet.houseNum)) },
-    // yogas: { dhanaYoga: dhanYoga, chandraMangalaYoga: chandraMangala, lakshmiyoga },
-    // jupiter: { house: jupiter ? Number(jupiter.houseNum) : null, nakshatra: jupiter ? jupiter.nakshatra : null },
-    // venus: { house: venus ? Number(venus.houseNum) : null, sign: venus ? (venus.sign || venus.rashi) : null },
-    // moonInWealthNakshatra: moonInWealthNak, moonNakshatra: moonNak ? moonNak.name : null,
-    // d2Available: !!d2,
-    // d2AscendantSign: d2 ? (d2.ascendant?.sign || d2.ascendant?.rashi || null) : null,
-    // note: d2 ? "D2 (Hora chart) loaded -- ascendant sign confirms wealth accumulation tendency." : "D2 chart not yet loaded. Wealth read from D1 only.",
-    //v
+    note: d2 ? "D2 (Hora chart) loaded -- ascendant sign confirms wealth accumulation tendency." : "D2 chart not yet loaded. Wealth read from D1 only.",
   };
 }
 
